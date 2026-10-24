@@ -1,0 +1,4 @@
+{
+  "_comment": "Overlay für künftige Datenlücken (nur Vorschau, markiert mit ◇). Muss vorhanden sein, auch wenn leer.",
+  "CVE-2026-111497": {}
+}

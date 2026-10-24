@@ -1,0 +1,6 @@
+.git
+.github
+dist
+data/2shell.json
+*.html
+README.md

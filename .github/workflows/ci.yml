@@ -1,0 +1,32 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Docker-Image bauen (holt 2shell.json von 2shell-data main)
+        run: docker build -t 2shell-site:ci .
+      - name: Container starten
+        run: docker run -d --name site -p 8080:80 2shell-site:ci
+      - name: Smoke-Test
+        run: ./scripts/smoke.sh http://127.0.0.1:8080
+      - name: Container-Log
+        if: always()
+        run: docker logs site 2>&1 | tail -n 50 || true

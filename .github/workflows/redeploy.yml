@@ -1,0 +1,50 @@
+name: redeploy
+
+# Baut die Seite in Coolify neu, damit die Daten von 2shell-data aktuell bleiben.
+# 2shell-data aktualisiert um 0/6/12/18 Uhr UTC (cron '0 */6 * * *'), dieser Lauf kommt 30 min später.
+# Braucht die Repo-Secrets COOLIFY_URL, COOLIFY_APP_UUID und COOLIFY_DEPLOY_TOKEN (setzt Roman).
+# Fehlen sie, wird der Lauf mit Hinweis übersprungen (nicht rot).
+on:
+  schedule:
+    - cron: '30 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: redeploy
+  cancel-in-progress: false
+
+jobs:
+  redeploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+      COOLIFY_APP_UUID: ${{ secrets.COOLIFY_APP_UUID }}
+      COOLIFY_DEPLOY_TOKEN: ${{ secrets.COOLIFY_DEPLOY_TOKEN }}
+      DATA_URL: https://raw.githubusercontent.com/WaldemarEnns/2shell-data/main/data/2shell.json
+    steps:
+      - name: Secrets prüfen
+        id: cfg
+        run: |
+          if [ -z "$COOLIFY_URL" ] || [ -z "$COOLIFY_APP_UUID" ] || [ -z "$COOLIFY_DEPLOY_TOKEN" ]; then
+            echo "::notice title=redeploy übersprungen::COOLIFY_URL, COOLIFY_APP_UUID oder COOLIFY_DEPLOY_TOKEN fehlt."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Daten erreichbar und gültig?
+        if: steps.cfg.outputs.ok == 'true'
+        run: |
+          curl -sSf --retry 3 -o 2shell.json "$DATA_URL"
+          python3 -c "import json,sys; d=json.load(open('2shell.json')); ids=[a['id'] for a in d['advisories']]; assert d.get('stand') and 'CVE-2026-111497' in ids, ids; print('stand', d['stand'])"
+      - name: Coolify-Deploy auslösen
+        if: steps.cfg.outputs.ok == 'true'
+        run: |
+          resp=$(curl -sS --fail-with-body --retry 2 -X POST \
+            -H "Authorization: Bearer $COOLIFY_DEPLOY_TOKEN" \
+            -H "Accept: application/json" \
+            "${COOLIFY_URL%/}/api/v1/deploy?uuid=${COOLIFY_APP_UUID}&force=false")
+          echo "$resp" | python3 -c "import json,sys; d=json.load(sys.stdin); [print('Deployment gestartet:', x.get('deployment_uuid'), x.get('message')) for x in d.get('deployments', [])]"

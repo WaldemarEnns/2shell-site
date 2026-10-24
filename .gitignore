@@ -1,0 +1,5 @@
+dist/
+data/2shell.json
+data/2shell.zustaende.json
+/*.html
+__pycache__/
