@@ -21,6 +21,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Unit-Tests (inkl. freigegebener Texte gegen 2shell-data main)
+        env:
+          CHECK_LIVE_TEXTS: '1'
+        run: |
+          curl -sSfL --retry 3 -o data/2shell.json https://raw.githubusercontent.com/WaldemarEnns/2shell-data/main/data/2shell.json
+          python3 -m unittest discover -s tests -v
       - name: Docker-Image bauen (holt 2shell.json von 2shell-data main)
         run: docker build -t 2shell-site:ci .
       - name: Container starten

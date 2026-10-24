@@ -65,12 +65,39 @@ def load():
 
 def adv(data, cid): return next(x for x in data["advisories"] if x["id"] == cid)
 
+def uniq(seq):
+    """Jeden Namen nur einmal, Reihenfolge bleibt, Groß-/Kleinschreibung zählt nicht."""
+    seen, out = set(), []
+    for n in seq:
+        k = str(n).strip().casefold()
+        if k and k not in seen:
+            seen.add(k); out.append(n)
+    return out
+
+def lead_names(nick):
+    """Hauptnamen, gleichrangig (Neo/Waldemar): Node2Shell und HTTP2Shell. Alle weiteren Namen gehören in extra."""
+    return [n for n in ("Node2Shell", "HTTP2Shell") if n in nick] or nick[:2]
+
+def alias_texts(data, ov):
+    """Die freigegebenen Namens-Texte (texte.md). Hauptnamen stehen nur im Hauptteil, extra nur dahinter."""
+    a = adv(data, "CVE-2026-111497")
+    main, extra = names(data, ov)
+    lead = lead_names(a["aliases"]["nicknames"])
+    return {
+        "desc_advisory": (f"CVE-2026-111497, bekannt als {' und '.join(lead)}, auch {' und '.join(extra)}: Fehler im Brotli-Decoder 1.0.3 bis 1.2.0. "
+                          "Betroffene Versionen, Prüfbefehle und Updates für Node.js, Bun, Python und die PHP-Erweiterung brotli."),
+        "h1_alias": f"{a['id']}, auch {' und '.join(extra)}",
+        "aka": f"auch {', '.join(extra)}",
+        "desc_overview_names": main,
+    }
+
 def names(data, ov):
     a = adv(data, "CVE-2026-111497")
     nick = a["aliases"]["nicknames"]          # Daten: Node2Shell, Python2Shell, HTTP2Shell, Broccoli2Shell
-    lead = [n for n in ("Node2Shell", "HTTP2Shell") if n in nick] or nick[:2]   # gleichrangig (Neo/Waldemar)
+    lead = lead_names(nick)
     main = " / ".join(lead)
-    extra = [n for n in nick if n not in lead] + [n for n in ov.get("CVE-2026-111497", {}).get("extraNicknames", []) if n not in nick]
+    lead_k = {n.casefold() for n in lead}
+    extra = uniq(n for n in nick + ov.get("CVE-2026-111497", {}).get("extraNicknames", []) if n.casefold() not in lead_k)
     return main, extra
 
 def head(title, desc, canonical):
@@ -261,8 +288,8 @@ def advisory(data, ov, label):
     a = adv(data, "CVE-2026-111497"); o = ov.get("CVE-2026-111497", {})
     main, extra = names(data, ov)
     title = f"{main} (CVE-2026-111497): Brotli-Lücke in Node.js, Bun und Python prüfen"
-    desc = (f"CVE-2026-111497, bekannt als {' und '.join(a['aliases']['nicknames'])}, auch {' und '.join(extra)}: Fehler im Brotli-Decoder 1.0.3 bis 1.2.0. "
-            "Betroffene Versionen, Prüfbefehle und Updates für Node.js, Bun, Python und die PHP-Erweiterung brotli.")
+    at = alias_texts(data, ov)
+    desc = at["desc_advisory"]
     kev, kevsub = kev_text(data, a); ep, epsub = epss_text(data, a)
     vr = (a["cvss"].get("vendorRatings") or [None])[0]
     pending = [x for x in a["affected"] if x["fixStatus"] == "pending"]
@@ -303,7 +330,7 @@ def advisory(data, ov, label):
     nd, drows = distro_rows(a)
     canonical = "https://2shell.waldemarenns.de/cve-2026-111497"
     jsonld = {"@context": "https://schema.org", "@type": "TechArticle", "headline": title, "inLanguage": "de",
-              "about": {"@type": "Thing", "name": "CVE-2026-111497", "alternateName": a["aliases"]["nicknames"] + extra},
+              "about": {"@type": "Thing", "name": "CVE-2026-111497", "alternateName": uniq(a["aliases"]["nicknames"] + extra)},
               "dateModified": data["stand"], "author": {"@type": "Person", "name": "Waldemar Enns", "url": "https://waldemarenns.de"}}
     s = SUFFIX[0]
     vr_html = f'<dt>Node.js</dt><dd>stuft als <a href="{vr["url"]}">„{e(vr["rating"])}“</a> ein</dd>' if vr else ""
@@ -314,7 +341,7 @@ def advisory(data, ov, label):
 {stale_banner(data)}
 <div class="hero">
 <div>
-<h1>{e(main)}: Lücke im Brotli-Decoder<span class="alias">{a['id']}, auch {' und '.join(extra)}</span></h1>
+<h1>{e(main)}: Lücke im Brotli-Decoder<span class="alias">{e(at["h1_alias"])}</span></h1>
 <p class="lead">Präparierte, komprimierte Daten können den Brotli-Decoder von Google über das Ende eines Puffers hinausschreiben lassen. Das trifft Node.js, Bun, Python-Pakete und jede Software, die den C-Decoder in Version 1.0.3 bis 1.2.0 nutzt.</p>
 <div class="actions"><a class="btn btn-ink" href="#rueckruf">Betroffene Versionen ansehen</a><a class="btn btn-line" href="#notfall-check">Notfall-Check buchen</a></div>
 </div>
@@ -482,7 +509,7 @@ def overview(data, ov, label):
     main, extra = names(data, ov)
     title = f"PHP2Shell und {main}: Sicherheitslücken prüfen und schließen lassen"
     desc = (f"Aktuelle 2shell-Lücken mit betroffenen Versionen und Fixes: PHP2Shell ({p1['id']}, {p2['id']}) "
-            f"und {' / '.join(h['aliases']['nicknames'])} ({h['id']}). Notfall-Check zum Festpreis von Waldemar Enns.")
+            f"und {alias_texts(data, ov)['desc_overview_names']} ({h['id']}). Notfall-Check zum Festpreis von Waldemar Enns.")
     kev_h, kevs_h = kev_text(data, h); kev_p, kevs_p = kev_text(data, p1)
     ep_h, _ = epss_text(data, h)
     ep_p = "keine Angabe" if not (p1.get("epss") and p2.get("epss")) else f"{num(p1['epss']['score']*100,2)} % und {num(p2['epss']['score']*100,2)} %"
@@ -526,7 +553,7 @@ def overview(data, ov, label):
 <h2 id="h-luecken">Aktuelle Lücken</h2>
 <div class="vulns">
 <article class="vuln">
-<div><h3>{e(main)}</h3><p class="ids">{h['id']}</p><p class="aka">auch {', '.join(extra)}</p></div>
+<div><h3>{e(main)}</h3><p class="ids">{h['id']}</p><p class="aka">{e(alias_texts(data, ov)["aka"])}</p></div>
 <dl>
 <dt>Betrifft</dt><dd>Brotli-Decoder 1.0.3 bis 1.2.0 in Node.js, Bun, Python-Paketen und gebündelten Kopien</dd>
 <dt>Fix</dt><dd>Node.js {node_fix} · Bun {bun_fix} · {py_fix}</dd>
