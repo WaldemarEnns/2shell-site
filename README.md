@@ -35,6 +35,7 @@ nginx (`nginx/`): `/cve-2026-111497` (Canonical, ohne Schrägstrich) liefert dir
 - Coolify-App mit Build Pack **Dockerfile**, Port **80**, Domain `https://2shell.waldemarenns.de`.
 - `.github/workflows/redeploy.yml` löst alle 6 Stunden (`30 */6 * * *` UTC, 30 min nach dem Datenlauf von 2shell-data) und per Hand einen Neubau über die Coolify-API aus. Sonst zeigt die Seite nach 24 h das Veraltet-Banner.
 - Repo-Secrets (setzt Roman): `COOLIFY_URL` (z. B. `https://coolify.example.de`, ohne `/api`), `COOLIFY_APP_UUID`, `COOLIFY_DEPLOY_TOKEN` (API-Token mit Deploy-Recht). Fehlen sie, überspringt der Workflow den Lauf mit einem Hinweis.
+- `.github/workflows/live-data-check.yml` (Name `live-data-check`) prüft alle 6 Stunden (`15 */6 * * *` UTC, zwischen Datenlauf und Redeploy) und per Hand die Seite gegen 2shell-data `main`: Daten, freigegebene Texte, Abnahme-Checks. Ohne Deploy, ohne Secrets. Rot heißt: Daten oder Texte prüfen.
 - `.github/workflows/ci.yml` baut bei jedem PR und Push das Image und testet es mit `scripts/smoke.sh`.
 
 ## Schriften

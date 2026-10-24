@@ -1,0 +1,39 @@
+name: live-data-check
+
+# Prüft die Seite gegen die aktuellen Daten von 2shell-data main, ohne zu deployen.
+# 2shell-data refresh: '0 */6 * * *' UTC (Daten-PRs mergen automatisch nach grüner CI),
+# dieser Check: '15 */6 * * *', redeploy.yml: '30 */6 * * *'.
+# Ein roter Lauf heißt: Daten passen nicht mehr zu den freigegebenen Texten oder den Abnahme-Checks.
+# Status per API: GET /repos/WaldemarEnns/2shell-site/actions/workflows/live-data-check.yml/runs
+on:
+  schedule:
+    - cron: '15 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-data-check
+  cancel-in-progress: false
+
+jobs:
+  live-data-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: 2shell.json von 2shell-data main laden
+        run: curl -sSfL --retry 3 -o data/2shell.json https://raw.githubusercontent.com/WaldemarEnns/2shell-data/main/data/2shell.json
+      - name: Daten prüfen
+        run: python3 scripts/check_data.py
+      - name: Unit-Tests inkl. freigegebener Texte
+        env:
+          CHECK_LIVE_TEXTS: '1'
+        run: python3 -m unittest discover -s tests -v
+      - name: Bauen
+        run: python3 build.py --prod
+      - name: Abnahme-Checks dist/
+        run: python3 scripts/check_dist.py
