@@ -65,12 +65,22 @@ def load():
 
 def adv(data, cid): return next(x for x in data["advisories"] if x["id"] == cid)
 
+def uniq(seq):
+    """Jeden Namen nur einmal, Reihenfolge bleibt, Groß-/Kleinschreibung zählt nicht."""
+    seen, out = set(), []
+    for n in seq:
+        k = str(n).strip().casefold()
+        if k and k not in seen:
+            seen.add(k); out.append(n)
+    return out
+
 def names(data, ov):
     a = adv(data, "CVE-2026-111497")
     nick = a["aliases"]["nicknames"]          # Daten: Node2Shell, Python2Shell, HTTP2Shell, Broccoli2Shell
     lead = [n for n in ("Node2Shell", "HTTP2Shell") if n in nick] or nick[:2]   # gleichrangig (Neo/Waldemar)
     main = " / ".join(lead)
-    extra = [n for n in nick if n not in lead] + [n for n in ov.get("CVE-2026-111497", {}).get("extraNicknames", []) if n not in nick]
+    lead_k = {n.casefold() for n in lead}
+    extra = uniq(n for n in nick + ov.get("CVE-2026-111497", {}).get("extraNicknames", []) if n.casefold() not in lead_k)
     return main, extra
 
 def head(title, desc, canonical):
@@ -303,7 +313,7 @@ def advisory(data, ov, label):
     nd, drows = distro_rows(a)
     canonical = "https://2shell.waldemarenns.de/cve-2026-111497"
     jsonld = {"@context": "https://schema.org", "@type": "TechArticle", "headline": title, "inLanguage": "de",
-              "about": {"@type": "Thing", "name": "CVE-2026-111497", "alternateName": a["aliases"]["nicknames"] + extra},
+              "about": {"@type": "Thing", "name": "CVE-2026-111497", "alternateName": uniq(a["aliases"]["nicknames"] + extra)},
               "dateModified": data["stand"], "author": {"@type": "Person", "name": "Waldemar Enns", "url": "https://waldemarenns.de"}}
     s = SUFFIX[0]
     vr_html = f'<dt>Node.js</dt><dd>stuft als <a href="{vr["url"]}">„{e(vr["rating"])}“</a> ein</dd>' if vr else ""

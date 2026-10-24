@@ -9,7 +9,8 @@ Keine Tracker, keine Cookies, kein JavaScript außer JSON-LD, keine Anfragen an 
 ```sh
 curl -fsSL -o data/2shell.json https://raw.githubusercontent.com/WaldemarEnns/2shell-data/main/data/2shell.json
 python3 build.py --prod        # Python 3.9+, keine Abhängigkeiten
-python3 scripts/check_dist.py  # Abnahme-Checks
+python3 scripts/check_dist.py  # Abnahme-Checks (u. a. alternateName im JSON-LD ohne Dubletten)
+python3 -m unittest discover -s tests
 ```
 
 Ausgabe: `dist/` (`index.html`, `cve-2026-111497/index.html`, `style.css`, `fonts/`). `python3 build.py` ohne `--prod` baut die Vorschau mit Leiste und noindex.

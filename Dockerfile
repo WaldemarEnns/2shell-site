@@ -10,10 +10,12 @@ COPY build.py style.css ./
 COPY fonts/ fonts/
 COPY data/overlay.json data/overlay.json
 COPY scripts/ scripts/
+COPY tests/ tests/
 # ADD lädt die Datei bei jedem Build neu (Cache nur, wenn sich der Inhalt nicht geändert hat)
 # und bricht den Build bei HTTP-Fehlern ab. check_data.py stoppt bei leeren oder kaputten Daten.
 ADD --chmod=644 ${DATA_URL} data/2shell.json
-RUN python3 scripts/check_data.py \
+RUN python3 -m unittest discover -s tests \
+ && python3 scripts/check_data.py \
  && python3 build.py --prod \
  && python3 scripts/check_dist.py
 
