@@ -21,6 +21,20 @@ def alt_name_dupes(node, path="JSON-LD"):
             out += alt_name_dupes(v, f"{path}[{i}]")
     return out
 
+def name_dupes(text, where):
+    """Fehlermeldungen, wenn ein *2Shell-Name in einem Text mehr als einmal vorkommt."""
+    found = [m.group(0).casefold() for m in re.finditer(r"\b\w*2Shell\b", text, re.I)]
+    return [f"{where}: '{n}' kommt {found.count(n)}x vor: {text[:160]}" for n in sorted(set(found)) if found.count(n) > 1]
+
+
+NAME_TEXTS = [  # (Muster, Ort) für Texte, in denen jeder Name nur einmal stehen darf
+    (r'<meta name="description" content="([^"]*)"', "meta description"),
+    (r'<meta property="og:description" content="([^"]*)"', "og:description"),
+    (r'<span class="alias">(.*?)</span>', "H1-Zusatz"),
+    (r'<p class="aka">(.*?)</p>', "Karte (aka)"),
+]
+
+
 def main():
     dist = pathlib.Path(__file__).resolve().parent.parent / "dist"
     need = ["index.html", "cve-2026-111497/index.html", "style.css"]
@@ -45,6 +59,9 @@ def main():
         for m in re.finditer(r'<script\b([^>]*)>', t, re.I):
             if 'type="application/ld+json"' not in m.group(1):
                 errors.append(f"{rel}: Script ohne JSON-LD-Typ: {m.group(0)}")
+        for pat, where in NAME_TEXTS:
+            for m in re.finditer(pat, t, re.S):
+                errors += [f"{rel}: {x}" for x in name_dupes(m.group(1), where)]
         # JSON-LD: gültiges JSON, alternateName ohne doppelte Namen (Groß-/Kleinschreibung egal)
         for m in re.finditer(r'<script type="application/ld\+json">(.*?)</script>', t, re.S):
             try:
