@@ -97,6 +97,7 @@ table.data .note{display:block;font-weight:400;font-size:.8125rem;color:var(--in
 .warn{background:var(--ochre-t);color:var(--ochre)}
 .unk{background:transparent;color:var(--ink-3);border:1px dashed var(--ink-3)}
 .unk::before{background:transparent;border:1px solid currentColor}
+.neu{background:transparent;color:var(--ink-2);border:1px solid var(--rule)}
 
 .paths{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:2px solid var(--ink);margin-top:1.5rem}
 .paths article{padding:1.25rem 1.5rem 0 0}

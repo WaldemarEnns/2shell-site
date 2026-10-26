@@ -170,10 +170,24 @@ def epss_text(data, a):
     if not ep: return "keine Angabe", "<small>FIRST hat noch keinen Wert veröffentlicht.</small>"
     return f"{num(ep['score']*100,2)} %", f"<small>Perzentil {num(ep['percentile']*100,0)} · Stand {fdt(ep['date'])}</small>{src_hint(data,a,'firstEpss')}"
 
-def pill(fs, ref=None):
+PR_STATE = {"open": "offen", "merged": "gemergt", "closed": "geschlossen", "released": "veröffentlicht"}
+
+def pr_state(ref):
+    """Zustand eines Fix-Belegs auf Deutsch (Daten liefern open/merged/closed/released)."""
+    st = (ref or {}).get("state")
+    return PR_STATE.get(st, "Stand unbekannt" if not st else st)
+
+def upstream_only(x):
+    """Fix-Release gibt es upstream (GitHub), aber noch nicht in der Registry (PECL)."""
+    fa = (x or {}).get("fixAvailability") or {}
+    return fa if fa.get("state") == "upstream_only" else None
+
+def pill(fs, ref=None, avail=None):
+    if fs == "fixed" and avail:
+        return f'<a class="pill neu" href="{avail["url"]}" title="{e(avail.get("label") or "")}">Fix auf GitHub</a>'
     if fs == "fixed": return '<span class="pill ok">gepatcht</span>'
     if fs == "pending":
-        r = f' <a href="{ref["url"]}">{e(ref["label"].split(" · ")[0])} ({"offen" if ref["state"]=="open" else e(ref["state"])})</a>' if ref else ""
+        r = f' <a href="{ref["url"]}">{e(ref["label"].split(" · ")[0])} ({pr_state(ref)})</a>' if ref else ""
         return f'<span class="pill warn">Fix in Arbeit</span>{r}'
     if fs == "none": return '<span class="pill warn">kein Fix</span>'
     if fs == "via_runtime":
@@ -227,7 +241,9 @@ def recall_rows(data, ov, a):
             fx = "Node.js " + ", ".join(f"<strong>{v}</strong>" for v in sorted(node_fix, key=lambda v: [int(p) for p in v.split(".")]))
         else:
             fx = ", ".join(f"<strong>{v}</strong>" for v in x["fixedVersions"]) or "–"
-        add(dn or x["package"], shown(x), fx, pill(x["fixStatus"], x.get("fixRef")), x.get("note") or "", mark, tested(x))
+        av = upstream_only(x)
+        st = pill(x["fixStatus"], x.get("fixRef"), av) + (f'<span class="note">{e(av["note"])}</span>' if av and av.get("note") else "")
+        add(dn or x["package"], shown(x), fx, st, x.get("note") or "", mark, tested(x))
     return "\n".join(r for _, r in rows)
 
 def distro_rows(a):
@@ -514,7 +530,7 @@ def overview(data, ov, label):
     ep_h, _ = epss_text(data, h)
     ep_p = "keine Angabe" if not (p1.get("epss") and p2.get("epss")) else f"{num(p1['epss']['score']*100,2)} % und {num(p2['epss']['score']*100,2)} %"
     pend = [x for x in h["affected"] if x["fixStatus"] == "pending"]
-    pend_txt = "; ".join(f'<span class="pill warn">Fix in Arbeit</span> {e(x.get("displayName") or x["package"])}, <a href="{x["fixRef"]["url"]}">{e(x["fixRef"]["label"].split(" · ")[0])} {"offen" if x["fixRef"]["state"]=="open" else e(x["fixRef"]["state"])}</a>' for x in pend)
+    pend_txt = "; ".join(f'<span class="pill warn">Fix in Arbeit</span> {e(x.get("displayName") or x["package"])}, <a href="{x["fixRef"]["url"]}">{e(x["fixRef"]["label"].split(" · ")[0])} {pr_state(x["fixRef"])}</a>' for x in pend)
     node_fix = ", ".join(r["fixedIn"] for r in h["runtimes"] if r["product"] == "Node.js" and r["fixedIn"])
     bun_fix = ", ".join(r["fixedIn"] for r in h["runtimes"] if r["product"] == "Bun" and r["fixedIn"])
     py_fix = " · ".join(f'{"Brotli" if x["package"]=="brotli" else x["package"]} {", ".join(x["fixedVersions"])}' for x in h["affected"] if x["ecosystem"] == "PyPI")

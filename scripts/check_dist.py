@@ -46,6 +46,9 @@ def main():
             continue
         t = f.read_text(encoding="utf-8")
         rel = f.relative_to(dist)
+        # Englische Zustände von Fix-Belegen gehören nicht auf die Seite (z. B. „PR #105 (merged)“)
+        for m in re.finditer(r'\b(PR #\d+)\s*\(?(open|merged|closed|released)\b', t):
+            errors.append(f"{rel}: englischer Zustand '{m.group(0)}'")
         for bad in ("noindex", "nofollow", "ENTWURF", "Entwurf", "zustaende"):
             if bad in t:
                 errors.append(f"{rel}: enthält '{bad}'")
