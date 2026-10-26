@@ -35,9 +35,28 @@ NAME_TEXTS = [  # (Muster, Ort) für Texte, in denen jeder Name nur einmal stehe
 ]
 
 
+UMAMI_SRC = 'src="https://umami.alphabyte-solutions.com/script.js"'
+
+
+def umami_problems(html):
+    """Genau ein Umami-Script pro Seite, mit Website-ID und auf die Live-Domain beschränkt."""
+    tags = [m.group(0) for m in re.finditer(r"<script\b[^>]*>", html) if UMAMI_SRC in m.group(0)]
+    if len(tags) != 1:
+        return [f"Umami-Script {len(tags)}x statt 1x"]
+    t = tags[0]
+    out = []
+    if not re.search(r'data-website-id="[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"', t):
+        out.append(f"Umami ohne gültige data-website-id: {t}")
+    if 'data-domains="2shell.waldemarenns.de"' not in t:
+        out.append(f"Umami ohne data-domains=2shell.waldemarenns.de: {t}")
+    if " defer" not in t:
+        out.append(f"Umami ohne defer: {t}")
+    return out
+
+
 def main():
     dist = pathlib.Path(__file__).resolve().parent.parent / "dist"
-    need = ["index.html", "cve-2026-111497/index.html", "style.css"]
+    need = ["index.html", "cve-2026-111497/index.html", "datenschutz/index.html", "style.css"]
     errors = [f"fehlt: dist/{n}" for n in need if not (dist / n).is_file()]
     if not list((dist / "fonts").glob("*.woff2")):
         errors.append("fehlt: dist/fonts/*.woff2")
@@ -54,10 +73,14 @@ def main():
             tag = m.group(0)
             if re.search(r'rel="canonical"', tag):
                 continue
+            if tag.startswith("<script") and UMAMI_SRC in tag:
+                continue  # selbst gehostetes Umami, siehe umami_dupes()
             if re.search(r'(src|href|srcset|data)="(https?:)?//', tag, re.I):
                 errors.append(f"{rel}: externe Ressource {tag[:120]}")
+        if f.suffix == ".html":
+            errors += [f"{rel}: {x}" for x in umami_problems(t)]
         for m in re.finditer(r'<script\b([^>]*)>', t, re.I):
-            if 'type="application/ld+json"' not in m.group(1):
+            if 'type="application/ld+json"' not in m.group(1) and UMAMI_SRC not in m.group(1):
                 errors.append(f"{rel}: Script ohne JSON-LD-Typ: {m.group(0)}")
         for pat, where in NAME_TEXTS:
             for m in re.finditer(pat, t, re.S):

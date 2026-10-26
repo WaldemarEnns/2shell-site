@@ -16,6 +16,10 @@ MONTHS = ["Januar","Februar","März","April","Mai","Juni","Juli","August","Septe
 SUFFIX = [""]
 PROD = [False]
 BASE = "https://2shell.waldemarenns.de"
+# Umami, selbst gehostet (Coolify-Service umami-analytics auf Waldemars Server in Deutschland), cookielos.
+UMAMI_HOST = "https://umami.alphabyte-solutions.com"
+UMAMI_ID = "c6fb22c0-e934-48fc-bf0d-8c4d35c9e476"   # Website „2shell“ in Umami
+UMAMI_DOMAIN = "2shell.waldemarenns.de"             # zählt nur auf der Live-Domain, nicht lokal oder in CI
 NOW = [dt.datetime.now(dt.timezone.utc)]
 OV_HTML = "<span class=\"ov\" title=\"Ergänzung, fehlt in 2shell.json\">◇</span>"
 OV_USED = [0]
@@ -120,7 +124,13 @@ def head(title, desc, canonical):
 <link rel="preload" href="{asset('fonts/plexsans.woff2')}" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="{asset('fonts/fraunces.woff2')}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{asset('style.css')}">
-"""
+{umami_tag()}"""
+
+def umami_tag():
+    """Umami-Script nur in der Produktion. data-domains verhindert Zählung außerhalb der Live-Domain."""
+    if not PROD[0]: return ""
+    return f'<script defer src="{UMAMI_HOST}/script.js" data-website-id="{UMAMI_ID}" data-domains="{UMAMI_DOMAIN}"></script>\n'
+
 
 def draftbar(data, label):
     if PROD[0]: return ""
@@ -249,12 +259,14 @@ def range_note(data):
     if not n: return None
     return re.sub(r"\s*\((displayRange|affectedRange)\)", "", n)   # Feldnamen gehören nicht auf die Seite
 
-def footer(data):
+def footer(data, active=None):
+    facts = "" if active == "datenschutz" else f"""<p>{stand_line(data)}. Die Fakten in Tabellen, Zeitleiste und Quellen kommen aus OSV, NVD, GitHub Advisories, CISA KEV, FIRST EPSS, endoflife.date und den Herstellerhinweisen. Die Seite aktualisiert sie alle {data.get('refreshIntervalHours', 6)} Stunden.</p>
+"""   # auf der Datenschutzseite ohne Stand-/Fakten-Zeile (Desi)
+    cur = ' aria-current="page"' if active == "datenschutz" else ""
     return f"""<footer class="site"><div class="wrap">
-<div><p>{stand_line(data)}. Die Fakten in Tabellen, Zeitleiste und Quellen kommen aus OSV, NVD, GitHub Advisories, CISA KEV, FIRST EPSS, endoflife.date und den Herstellerhinweisen. Die Seite aktualisiert sie alle {data.get('refreshIntervalHours', 6)} Stunden.</p>
-<p>Diese Seite ist unabhängig. Sie gehört weder zu Google noch zum Node.js-Projekt, zu Bun, zum PHP-Projekt oder zur Python Software Foundation. Im Zweifel gelten die Herstellerhinweise.</p>
-<p>Gesetzt in Fraunces und IBM Plex. Keine Tracker, keine Cookies, keine Anfragen an Dritte.</p></div>
-<nav aria-label="Rechtliches"><a href="https://waldemarenns.de">Über Waldemar Enns</a><a href="https://waldemarenns.de/imprint">Impressum</a><a href="https://waldemarenns.de/privacy-policy">Datenschutz</a></nav>
+<div>{facts}<p>Diese Seite ist unabhängig. Sie gehört weder zu Google noch zum Node.js-Projekt, zu Bun, zum PHP-Projekt oder zur Python Software Foundation. Im Zweifel gelten die Herstellerhinweise.</p>
+<p>Gesetzt in Fraunces und IBM Plex. Keine Cookies. Seitenaufrufe zähle ich anonym mit Umami auf meinem eigenen Server.</p></div>
+<nav aria-label="Rechtliches"><a href="https://waldemarenns.de">Über Waldemar Enns</a><a href="https://waldemarenns.de/imprint">Impressum</a><a href="{href('datenschutz')}"{cur}>Datenschutz</a></nav>
 </div></footer>"""
 
 def offer_block(main):
@@ -627,6 +639,20 @@ def states(data):
         if a["id"] == "CVE-2026-111497": a["epss"] = None
     return d
 
+def privacy(data, ov, label):
+    """Datenschutzerklärung (Text in legal/datenschutz.html, Entwurf bis zu Waldemars Freigabe)."""
+    main, _ = names(data, ov)
+    body = re.sub(r"^\s*<!--.*?-->\s*", "", (ROOT / "legal/datenschutz.html").read_text(), flags=re.S)
+    title = "Datenschutzerklärung: 2shell-Notfall-Check von Waldemar Enns"
+    desc = "Datenschutzerklärung von 2shell.waldemarenns.de: Hosting bei Hetzner in Deutschland, selbst gehostete Schriften, cookielose Statistik mit selbst gehostetem Umami."
+    return head(title, desc, f"{BASE}/datenschutz") + '</head><body>' + draftbar(data, label) + site_header("datenschutz", main) + f"""
+<main id="main">
+<div class="wrap prose legal">
+<h1>Datenschutzerklärung</h1>
+{body}
+</div>
+</main>""" + footer(data, "datenschutz") + "\n</body></html>\n"
+
 def build_prod(data, ov):
     import shutil, sys
     dist = ROOT / "dist"
@@ -635,6 +661,8 @@ def build_prod(data, ov):
     PROD[0] = True; SUFFIX[0] = ""; NOW[0] = dt.datetime.now(dt.timezone.utc)
     (dist / "index.html").write_text(overview(data, ov, ""))
     (dist / "cve-2026-111497" / "index.html").write_text(advisory(data, ov, ""))
+    (dist / "datenschutz").mkdir()
+    (dist / "datenschutz" / "index.html").write_text(privacy(data, ov, ""))
     shutil.copy(ROOT / "style.css", dist / "style.css")
     shutil.copytree(ROOT / "fonts", dist / "fonts")
     print("gebaut (prod):", ", ".join(str(p.relative_to(ROOT)) for p in sorted(dist.rglob("*")) if p.is_file()))
@@ -652,7 +680,7 @@ if __name__ == "__main__":
     for suf, d, lab in [("", data, real), (".zustaende", st, sim)]:
         SUFFIX[0] = suf
         NOW[0] = dt.datetime.now(dt.timezone.utc) if suf == "" else dt.datetime(2026, 10, 24, 11, 0, tzinfo=dt.timezone.utc)
-        for name, fn in ((f"index{suf}.html", overview), (f"cve-2026-111497{suf}.html", advisory)):
+        for name, fn in ((f"index{suf}.html", overview), (f"cve-2026-111497{suf}.html", advisory), (f"datenschutz{suf}.html", privacy)):
             OV_USED[0] = 0
             fn(d, ov, lab)              # erster Lauf zählt ◇, zweiter Lauf rendert die Legende passend
             out[name] = fn(d, ov, lab)

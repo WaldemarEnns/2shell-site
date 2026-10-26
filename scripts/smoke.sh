@@ -9,6 +9,7 @@ for i in $(seq 1 30); do curl -sf -o /dev/null "$B/" && break; sleep 1; done
 
 [ "$(code /)" = 200 ] || fail "/ liefert nicht 200"
 [ "$(code /cve-2026-111497)" = 200 ] || fail "/cve-2026-111497 liefert nicht 200"
+[ "$(code /datenschutz)" = 200 ] || fail "/datenschutz liefert nicht 200"
 [ "$(code /style.css)" = 200 ] || fail "/style.css liefert nicht 200"
 [ "$(code /fonts/plexsans.woff2)" = 200 ] || fail "/fonts/plexsans.woff2 liefert nicht 200"
 [ "$(code /gibt-es-nicht)" = 404 ] || fail "unbekannte URL liefert nicht 404"
@@ -18,7 +19,7 @@ loc=$(curl -sI "$B/cve-2026-111497/" | tr -d '\r' | awk 'tolower($1)=="location:
 [ "$loc" = "/cve-2026-111497" ] || fail "Umleitung zeigt auf '$loc'"
 
 h=$(curl -sI "$B/cve-2026-111497" | tr -d '\r')
-for want in "Content-Security-Policy: default-src 'none'" "X-Content-Type-Options: nosniff" "Referrer-Policy: strict-origin-when-cross-origin" "Cache-Control: public, max-age=300"; do
+for want in "Content-Security-Policy: default-src 'none'.*script-src https://umami.alphabyte-solutions.com; connect-src https://umami.alphabyte-solutions.com;" "X-Content-Type-Options: nosniff" "Referrer-Policy: strict-origin-when-cross-origin" "Cache-Control: public, max-age=300"; do
   grep -qi "^$want" <<<"$h" || fail "Header fehlt: $want"
 done
 grep -qi '^set-cookie' <<<"$h" && fail "Set-Cookie gesetzt"
@@ -30,5 +31,7 @@ for p in / /cve-2026-111497; do
   grep -qiE 'noindex|nofollow|entwurf' <<<"$html" && fail "$p enthält noindex/ENTWURF"
   grep -q '<link rel="canonical" href="https://2shell.waldemarenns.de' <<<"$html" || fail "$p ohne Canonical"
   grep -q 'Stand' <<<"$html" || fail "$p ohne Stand"
+  grep -q '<script defer src="https://umami.alphabyte-solutions.com/script.js" data-website-id="' <<<"$html" || fail "$p ohne Umami-Script"
+  grep -q 'Seitenaufrufe zähle ich anonym mit Umami auf meinem eigenen Server.' <<<"$html" || fail "$p ohne Umami-Hinweis im Fuß"
 done
 echo "Smoke-Test ok: $B"

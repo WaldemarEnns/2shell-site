@@ -8,6 +8,7 @@ WORKDIR /site
 ARG DATA_URL=https://raw.githubusercontent.com/WaldemarEnns/2shell-data/main/data/2shell.json
 COPY build.py style.css ./
 COPY fonts/ fonts/
+COPY legal/ legal/
 COPY data/overlay.json data/overlay.json
 COPY scripts/ scripts/
 COPY tests/ tests/

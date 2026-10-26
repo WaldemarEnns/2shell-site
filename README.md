@@ -2,7 +2,7 @@
 
 Statische Seite für **https://2shell.waldemarenns.de**: Übersicht und Sicherheitshinweis zu Node2Shell / HTTP2Shell (CVE-2026-111497) und PHP2Shell. Design und Texte von Desi, von Waldemar freigegeben. Die Fakten kommen aus [2shell-data](https://github.com/WaldemarEnns/2shell-data).
 
-Keine Tracker, keine Cookies, kein JavaScript außer JSON-LD, keine Anfragen an Dritte.
+Keine Cookies, keine Anfragen an Dritte. JavaScript nur als JSON-LD und das Umami-Script vom selbst gehosteten Umami (`umami.alphabyte-solutions.com`, Coolify-Service `umami-analytics`, Website „2shell“). Die Datenschutzerklärung steht in `legal/datenschutz.html` und erscheint unter `/datenschutz`.
 
 ## Bauen
 
@@ -28,7 +28,7 @@ docker run --rm -p 8080:80 2shell-site
 ./scripts/smoke.sh http://127.0.0.1:8080
 ```
 
-nginx (`nginx/`): `/cve-2026-111497` (Canonical, ohne Schrägstrich) liefert direkt 200, `/cve-2026-111497/` leitet per 301 dorthin um. Dazu Sicherheits-Header (CSP, nosniff, Referrer-Policy), gzip, Cache-Header (HTML 5 min, CSS 1 Tag, Schriften 1 Jahr) und ein Zugriffslog ohne IP-Adressen.
+nginx (`nginx/`): `/cve-2026-111497` (Canonical, ohne Schrägstrich) liefert direkt 200, `/cve-2026-111497/` leitet per 301 dorthin um. Dazu Sicherheits-Header (CSP mit `script-src`/`connect-src` nur für den Umami-Host, nosniff, Referrer-Policy), gzip, Cache-Header (HTML 5 min, CSS 1 Tag, Schriften 1 Jahr) und ein Zugriffslog ohne IP-Adressen.
 
 ## Deploy über Coolify
 
