@@ -37,8 +37,16 @@ NAME_TEXTS = [  # (Muster, Ort) für Texte, in denen jeder Name nur einmal stehe
 
 def main():
     dist = pathlib.Path(__file__).resolve().parent.parent / "dist"
-    need = ["index.html", "cve-2026-111497/index.html", "style.css"]
+    need = ["index.html", "cve-2026-111497/index.html", "style.css", "sitemap.xml", "robots.txt"]
     errors = [f"fehlt: dist/{n}" for n in need if not (dist / n).is_file()]
+    if (dist / "sitemap.xml").is_file():
+        locs = re.findall(r"<loc>([^<]+)</loc>", (dist / "sitemap.xml").read_text(encoding="utf-8"))
+        canon = sorted(re.search(r'<link rel="canonical" href="([^"]+)"', (dist / n).read_text(encoding="utf-8")).group(1)
+                       for n in ("index.html", "cve-2026-111497/index.html") if (dist / n).is_file())
+        if sorted(locs) != canon:
+            errors.append(f"sitemap.xml passt nicht zu den Canonicals: {locs} vs. {canon}")
+    if (dist / "robots.txt").is_file() and "Sitemap: https://2shell.waldemarenns.de/sitemap.xml" not in (dist / "robots.txt").read_text():
+        errors.append("robots.txt ohne Sitemap-Zeile")
     if not list((dist / "fonts").glob("*.woff2")):
         errors.append("fehlt: dist/fonts/*.woff2")
     for f in sorted(dist.rglob("*")):

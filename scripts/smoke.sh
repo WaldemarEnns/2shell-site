@@ -10,6 +10,8 @@ for i in $(seq 1 30); do curl -sf -o /dev/null "$B/" && break; sleep 1; done
 [ "$(code /)" = 200 ] || fail "/ liefert nicht 200"
 [ "$(code /cve-2026-111497)" = 200 ] || fail "/cve-2026-111497 liefert nicht 200"
 [ "$(code /style.css)" = 200 ] || fail "/style.css liefert nicht 200"
+[ "$(code /sitemap.xml)" = 200 ] || fail "/sitemap.xml liefert nicht 200"
+curl -s "$B/robots.txt" | grep -q '^Sitemap: https://2shell.waldemarenns.de/sitemap.xml' || fail "robots.txt ohne Sitemap"
 [ "$(code /fonts/plexsans.woff2)" = 200 ] || fail "/fonts/plexsans.woff2 liefert nicht 200"
 [ "$(code /gibt-es-nicht)" = 404 ] || fail "unbekannte URL liefert nicht 404"
 

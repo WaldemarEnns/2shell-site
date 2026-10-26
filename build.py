@@ -627,6 +627,14 @@ def states(data):
         if a["id"] == "CVE-2026-111497": a["epss"] = None
     return d
 
+def sitemap(data):
+    """sitemap.xml für die indexierbaren Seiten (Canonical-URLs ohne Schrägstrich am Ende)."""
+    day = data["stand"][:10]
+    urls = "".join(f"  <url><loc>{BASE}{p}</loc><lastmod>{day}</lastmod></url>\n" for p in ("/", "/cve-2026-111497"))
+    return f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}</urlset>\n'
+
+ROBOTS = f"User-agent: *\nAllow: /\n\nSitemap: {BASE}/sitemap.xml\n"
+
 def build_prod(data, ov):
     import shutil, sys
     dist = ROOT / "dist"
@@ -635,6 +643,8 @@ def build_prod(data, ov):
     PROD[0] = True; SUFFIX[0] = ""; NOW[0] = dt.datetime.now(dt.timezone.utc)
     (dist / "index.html").write_text(overview(data, ov, ""))
     (dist / "cve-2026-111497" / "index.html").write_text(advisory(data, ov, ""))
+    (dist / "sitemap.xml").write_text(sitemap(data))
+    (dist / "robots.txt").write_text(ROBOTS)
     shutil.copy(ROOT / "style.css", dist / "style.css")
     shutil.copytree(ROOT / "fonts", dist / "fonts")
     print("gebaut (prod):", ", ".join(str(p.relative_to(ROOT)) for p in sorted(dist.rglob("*")) if p.is_file()))
