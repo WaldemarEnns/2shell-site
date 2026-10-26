@@ -38,11 +38,27 @@ class Umami(unittest.TestCase):
     def test_privacy_text(self):
         import re
         t = re.sub(r"^\s*<!--.*?-->", "", (ROOT / "legal/datenschutz.html").read_text(), flags=re.S)
-        for want in ("<h3>Umami</h3>", "umami.alphabyte-solutions.com", "auf unserem eigenen Server", "in Deutschland",
+        for want in ("<h3>Umami</h3>", "umami.alphabyte-solutions.com", "auf meinem eigenen Server in Deutschland", "in Deutschland",
                      "Umami setzt keine Cookies", "Deine IP-Adresse wird von Umami nicht gespeichert"):
             self.assertIn(want, t)
         self.assertNotIn("Selbstcheck", t)
         self.assertNotIn("Kurztermin buchen", t)
+        for bad in ("Telefax", "Werbung", "Kontaktformular", "Newsletter", "Externes Hosting", "extern gehostet",
+                    "Die Einwilligung ist jederzeit widerrufbar", "nach deiner Einwilligung"):
+            self.assertNotIn(bad, t)
+        for bad in re.findall(r"\b(?:[Ww]ir|uns|[Uu]nser\w*)\b", t):
+            self.fail(f"Wir-Form in der Datenschutzerklärung: {bad}")
+        self.assertIn("0173 6824410", t)
+        self.assertIn("<h2>5. Statistik</h2>", t)
+
+    def test_privacy_footer(self):
+        build.PROD[0] = True
+        html = build.footer(DATA, "datenschutz")
+        self.assertNotIn("Stand", html)
+        self.assertIn('href="/datenschutz" aria-current="page"', html)
+        self.assertIn(f"<p>{FOOT}</p>", html)
+        self.assertIn("Stand", build.footer(DATA))
+        self.assertNotIn("aria-current", build.footer(DATA))
 
 
 if __name__ == "__main__":

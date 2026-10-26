@@ -259,12 +259,14 @@ def range_note(data):
     if not n: return None
     return re.sub(r"\s*\((displayRange|affectedRange)\)", "", n)   # Feldnamen gehören nicht auf die Seite
 
-def footer(data):
+def footer(data, active=None):
+    facts = "" if active == "datenschutz" else f"""<p>{stand_line(data)}. Die Fakten in Tabellen, Zeitleiste und Quellen kommen aus OSV, NVD, GitHub Advisories, CISA KEV, FIRST EPSS, endoflife.date und den Herstellerhinweisen. Die Seite aktualisiert sie alle {data.get('refreshIntervalHours', 6)} Stunden.</p>
+"""   # auf der Datenschutzseite ohne Stand-/Fakten-Zeile (Desi)
+    cur = ' aria-current="page"' if active == "datenschutz" else ""
     return f"""<footer class="site"><div class="wrap">
-<div><p>{stand_line(data)}. Die Fakten in Tabellen, Zeitleiste und Quellen kommen aus OSV, NVD, GitHub Advisories, CISA KEV, FIRST EPSS, endoflife.date und den Herstellerhinweisen. Die Seite aktualisiert sie alle {data.get('refreshIntervalHours', 6)} Stunden.</p>
-<p>Diese Seite ist unabhängig. Sie gehört weder zu Google noch zum Node.js-Projekt, zu Bun, zum PHP-Projekt oder zur Python Software Foundation. Im Zweifel gelten die Herstellerhinweise.</p>
+<div>{facts}<p>Diese Seite ist unabhängig. Sie gehört weder zu Google noch zum Node.js-Projekt, zu Bun, zum PHP-Projekt oder zur Python Software Foundation. Im Zweifel gelten die Herstellerhinweise.</p>
 <p>Gesetzt in Fraunces und IBM Plex. Keine Cookies. Seitenaufrufe zähle ich anonym mit Umami auf meinem eigenen Server.</p></div>
-<nav aria-label="Rechtliches"><a href="https://waldemarenns.de">Über Waldemar Enns</a><a href="https://waldemarenns.de/imprint">Impressum</a><a href="{href('datenschutz')}">Datenschutz</a></nav>
+<nav aria-label="Rechtliches"><a href="https://waldemarenns.de">Über Waldemar Enns</a><a href="https://waldemarenns.de/imprint">Impressum</a><a href="{href('datenschutz')}"{cur}>Datenschutz</a></nav>
 </div></footer>"""
 
 def offer_block(main):
@@ -649,7 +651,7 @@ def privacy(data, ov, label):
 <h1>Datenschutzerklärung</h1>
 {body}
 </div>
-</main>""" + footer(data) + "\n</body></html>\n"
+</main>""" + footer(data, "datenschutz") + "\n</body></html>\n"
 
 def build_prod(data, ov):
     import shutil, sys
