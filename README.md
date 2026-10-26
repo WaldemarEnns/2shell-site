@@ -13,7 +13,7 @@ python3 scripts/check_dist.py  # Abnahme-Checks (u. a. alternateName im JSON-LD 
 python3 -m unittest discover -s tests
 ```
 
-Ausgabe: `dist/` (`index.html`, `cve-2026-111497/index.html`, `style.css`, `fonts/`). `python3 build.py` ohne `--prod` baut die Vorschau mit Leiste und noindex.
+Ausgabe: `dist/` (`index.html`, `cve-2026-111497/index.html`, `sitemap.xml`, `robots.txt`, `style.css`, `fonts/`). `python3 build.py` ohne `--prod` baut die Vorschau mit Leiste und noindex.
 
 ## Docker
 
