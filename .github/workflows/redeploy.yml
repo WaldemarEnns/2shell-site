@@ -4,6 +4,8 @@ name: redeploy
 # 2shell-data aktualisiert um 0/6/12/18 Uhr UTC (cron '0 */6 * * *'), dieser Lauf kommt 30 min später.
 # Braucht die Repo-Secrets COOLIFY_URL, COOLIFY_APP_UUID und COOLIFY_DEPLOY_TOKEN (setzt Roman).
 # Fehlen sie, wird der Lauf mit Hinweis übersprungen (nicht rot).
+# force=true: Coolify baut ohne Cache neu, auch beim gleichen Commit. Sonst nimmt Coolify das
+# vorhandene Image ("image found … Build step skipped"), und Daten und Banner-Zeit bleiben stehen.
 on:
   schedule:
     - cron: '30 */6 * * *'
@@ -46,5 +48,5 @@ jobs:
           resp=$(curl -sS --fail-with-body --retry 2 -X POST \
             -H "Authorization: Bearer $COOLIFY_DEPLOY_TOKEN" \
             -H "Accept: application/json" \
-            "${COOLIFY_URL%/}/api/v1/deploy?uuid=${COOLIFY_APP_UUID}&force=false")
+            "${COOLIFY_URL%/}/api/v1/deploy?uuid=${COOLIFY_APP_UUID}&force=true")
           echo "$resp" | python3 -c "import json,sys; d=json.load(sys.stdin); [print('Deployment gestartet:', x.get('deployment_uuid'), x.get('message')) for x in d.get('deployments', [])]"
