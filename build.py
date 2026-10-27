@@ -263,7 +263,7 @@ def offer_block(main):
 <p class="label" style="color:#B9B3A6">Notfall-Check {e(main)}</p>
 <h2>Ich prüfe deine Server und spiele die Updates ein.</h2>
 <p>Ich suche jede Node.js-, Bun- und Python-Installation auf deinem Server, auch in Containern und Images. Dann aktualisiere ich Runtime und Pakete, starte die Prozesse neu und sehe die Logs auf Auffälligkeiten durch. Du bekommst ein schriftliches Kurzprotokoll.</p>
-<ul><li>In der Regel fertig 48 Stunden nach Erhalt der Zugänge, an Werktagen.</li><li>Von Freitagabend bis Samstagabend arbeite ich nicht.</li><li>Finde ich Spuren eines Angriffs, halte ich an und bespreche mit dir das weitere Vorgehen.</li></ul>
+<ul><li>Finde ich Spuren eines Angriffs, halte ich an und bespreche mit dir das weitere Vorgehen.</li></ul>
 <p style="font-size:.875rem;color:#B9B3A6">Gleicher Umfang und gleiche Preise wie beim PHP-Notfall-Check.</p>
 </div>
 <div>
@@ -598,14 +598,14 @@ def overview(data, ov, label):
 <h2 id="h-ablauf">Vom Kurztermin zum Protokoll</h2>
 <ol class="steps">
 <li><span class="when">Heute</span><h3>Kurztermin oder E-Mail</h3><p>Du buchst einen Kurztermin oder schreibst mir, um welche Server es geht. Ich schicke dir ein Festpreisangebot, du gibst mir Zugang.</p></li>
-<li><span class="when">In der Regel 48 Stunden</span><h3>Prüfen und updaten</h3><p>Ich prüfe Versionen und Setup, spiele die Updates ein und sehe die Logs durch. Die 48 Stunden zählen ab Erhalt der Zugänge, an Werktagen.</p></li>
+<li><span class="when">Nach Erhalt der Zugänge</span><h3>Prüfen und updaten</h3><p>Ich prüfe Versionen und Setup, spiele die Updates ein und sehe die Logs durch.</p></li>
 <li><span class="when">Abschluss</span><h3>Protokoll</h3><p>Du liest schriftlich nach, was vorher lief, was ich geändert habe und was ich dir empfehle.</p></li>
 </ol>
 </div></section>
 
 <section class="block" aria-labelledby="h-wer"><div class="wrap prose">
 <h2 id="h-wer">Wer den Check macht</h2>
-<p>Ich bin Waldemar Enns, Webentwickler aus Rastatt mit 9 Jahren Erfahrung in Laravel und PHP, Vue und Nuxt sowie Node. Meine eigenen Server betreibe ich mit Docker. Von Freitagabend bis Samstagabend arbeite ich nicht. <a href="https://waldemarenns.de">Mehr über mich auf waldemarenns.de</a></p>
+<p>Ich bin Waldemar Enns, Webentwickler aus Rastatt mit 9 Jahren Erfahrung in Laravel und PHP, Vue und Nuxt sowie Node. Meine eigenen Server betreibe ich mit Docker. <a href="https://waldemarenns.de">Mehr über mich auf waldemarenns.de</a></p>
 </div></section>
 
 <section class="block" aria-label="Termin"><div class="wrap">
