@@ -11,7 +11,6 @@ from zoneinfo import ZoneInfo
 ROOT = pathlib.Path(__file__).parent
 BER = ZoneInfo("Europe/Berlin")
 CAL = "https://calendly.com/kontakt-waldemarenns"
-PHPCHECK = "https://php-check.waldemarenns.de/"
 MONTHS = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
 SUFFIX = [""]
 PROD = [False]
@@ -134,7 +133,7 @@ def site_header(active, main):
 <nav class="top" aria-label="Hauptnavigation">
 <a href="{href('index')}"{' aria-current="page"' if active=="index" else ''}>Übersicht</a>
 <a href="{href('cve-2026-111497')}"{' aria-current="page"' if active=="cve" else ''}>{e(main)}</a>
-<a href="{PHPCHECK}">PHP2Shell</a>
+<a href="{href('index')}#luecken">PHP2Shell</a>
 <a class="btn btn-ink btn-sm" href="{CAL}">Notfall-Check buchen</a>
 </nav></div></header>"""
 
@@ -271,7 +270,7 @@ def offer_block(main):
 <p class="tax">Server heißt: eigener Server, VPS oder Docker-Host. Ab 3 Systemen 15 % Rabatt je System. Du kennst den Preis, bevor ich anfange. Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.</p>
 <p style="margin-top:1.5rem"><a class="btn btn-ink" href="{CAL}">Notfall-Check buchen {ARROW}</a></p>
 <p style="font-size:.9375rem">Oder schreib mir an <a href="mailto:kontakt@waldemarenns.de?subject=Notfall-Check%20Node2Shell%20%2F%20HTTP2Shell">kontakt@waldemarenns.de</a>, um welche Server es geht.</p>
-<p style="font-size:.9375rem">Läuft deine Website mit PHP? Für PHP2Shell gibt es den <a href="{PHPCHECK}">PHP-Notfall-Check ab 149 €</a>.</p>
+<p style="font-size:.9375rem">Läuft deine Website mit PHP? Für PHP2Shell gibt es den <a href="{href('index')}#preise">PHP-Notfall-Check ab 149 €</a>.</p>
 </div></div>"""
 
 ROLE = {"reporter": "Gemeldet von", "fix": "Fix in Node.js", "exploit_research": "Exploit-Forschung", "analysis": "Analyse für Python"}
@@ -574,7 +573,7 @@ def overview(data, ov, label):
 <dt>EPSS</dt><dd>{ep_p}</dd>
 {f'<dt>Quellen</dt><dd class="srcs">{php_src}</dd>' if php_src else ''}
 </dl>
-<a class="btn btn-line btn-sm" href="{PHPCHECK}">PHP2Shell-Check öffnen {ARROW}</a>
+<a class="btn btn-line btn-sm" href="#preise">PHP-Notfall-Check ansehen {ARROW}</a>
 </article>
 </div>
 <p style="font-size:.875rem;color:var(--ink-3);margin-top:1rem">Keine allgemeine CVE-Datenbank: Hier stehen nur Lücken, für die ich einen Notfall-Check anbiete.</p>
@@ -586,7 +585,7 @@ def overview(data, ov, label):
 <div class="prices">
 <article><h3>PHP2Shell</h3><p>PHP-Version prüfen, Update einspielen, Logs durchsehen, Kurzprotokoll.</p>
 <p class="amount">149&nbsp;€ pro Website<br>299&nbsp;€ pro Server</p><p>Ab 3 Systemen 15 % Rabatt je System.</p>
-<a class="btn btn-line btn-sm" href="{PHPCHECK}#preise">Leistungen im PHP-Check ansehen</a></article>
+<a class="btn btn-ink btn-sm" href="{CAL}">Notfall-Check buchen</a></article>
 <article><h3>{e(main)}</h3><p>Node.js-, Bun- und Python-Installationen finden, Updates einspielen, Prozesse neu starten, Logs durchsehen, Kurzprotokoll.</p>
 <p class="amount">149&nbsp;€ pro Website<br>299&nbsp;€ pro Server</p><p>Server heißt: eigener Server, VPS oder Docker-Host. Ab 3 Systemen 15 % Rabatt je System.</p>
 <a class="btn btn-ink btn-sm" href="{CAL}">Notfall-Check buchen</a></article>

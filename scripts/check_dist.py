@@ -46,7 +46,8 @@ def main():
             continue
         t = f.read_text(encoding="utf-8")
         rel = f.relative_to(dist)
-        for bad in ("noindex", "nofollow", "ENTWURF", "Entwurf", "zustaende"):
+        for bad in ("noindex", "nofollow", "ENTWURF", "Entwurf", "zustaende",
+                    "php-check.waldemarenns.de"):  # php-check leitet seit 27.10.2026 per 301 auf 2shell um
             if bad in t:
                 errors.append(f"{rel}: enthält '{bad}'")
         # externe Ressourcen (Links <a href> zu anderen Seiten sind erlaubt, Laden von Dritten nicht)

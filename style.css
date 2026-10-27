@@ -1,5 +1,5 @@
 /* 2shell.waldemarenns.de · Desi 24.10.2026
-   Schriften wie php-check (Fraunces + IBM Plex). Tauschen: --font, --font-head, --font-mono unter :root. */
+   Schriften: Fraunces + IBM Plex. Tauschen: --font, --font-head, --font-mono unter :root. */
 @font-face{font-family:"Fraunces";src:url(fonts/fraunces.woff2) format("woff2");font-weight:300 700;font-display:swap}
 @font-face{font-family:"IBM Plex Sans";src:url(fonts/plexsans.woff2) format("woff2");font-weight:400 600;font-display:swap}
 @font-face{font-family:"IBM Plex Mono";src:url(fonts/plexmono-400.woff2) format("woff2");font-weight:400;font-display:swap}
