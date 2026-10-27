@@ -62,6 +62,11 @@ class LiveTexts(unittest.TestCase):
         self.assertIn(f'<p class="aka">{AKA}</p>', self.ov_html)
         self.assertIn(f'<meta name="description" content="{OVERVIEW_DESC}">', self.ov_html)
 
+    def test_no_php_check_links(self):
+        # php-check.waldemarenns.de leitet seit 27.10.2026 per 301 auf 2shell um
+        for html in (self.adv_html, self.ov_html):
+            self.assertNotIn("php-check", html)
+
     def test_no_hours_or_weekday_promises(self):
         # Waldemar, 27.10.2026: kein Hinweis auf Freitag-/Samstagabend und keine 48-Stunden-Zusage
         for html in (self.adv_html, self.ov_html):
