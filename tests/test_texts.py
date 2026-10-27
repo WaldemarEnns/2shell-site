@@ -62,6 +62,12 @@ class LiveTexts(unittest.TestCase):
         self.assertIn(f'<p class="aka">{AKA}</p>', self.ov_html)
         self.assertIn(f'<meta name="description" content="{OVERVIEW_DESC}">', self.ov_html)
 
+    def test_no_hours_or_weekday_promises(self):
+        # Waldemar, 27.10.2026: kein Hinweis auf Freitag-/Samstagabend und keine 48-Stunden-Zusage
+        for html in (self.adv_html, self.ov_html):
+            for s in ("Freitagabend", "Samstagabend", "48 Stunden", "48h", "48 h", "Werktagen"):
+                self.assertNotIn(s, html)
+
 
 if __name__ == "__main__":
     unittest.main()
